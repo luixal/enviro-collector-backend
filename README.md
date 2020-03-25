@@ -26,7 +26,7 @@ You can then access the platforms according to this data (assuming you are runni
 | Node-RED | http://localhost:1880/admin | admin | adminPassw0rd |
 | Grafana  | http://localhost:3000/      | admin | adminPassw0rd |
 
-You can find more info about this backend in [its detailed README file](./nodered-influxdb-grafana/README.md).
+You can find more info about this backend in [its detailed README file](https://github.com/luixal/enviro-collector-backend/tree/master/nodered-influxdb-grafana).
 
 
 [Enviro Collector]:https://github.com/luixal/enviro-collector
