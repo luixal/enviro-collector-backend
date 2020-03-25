@@ -1,0 +1,524 @@
+[
+    {
+        "id": "3fdb3428.b20bec",
+        "type": "tab",
+        "label": "Sensor Values Collector",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "4a3b25be.9ccf2c",
+        "type": "tab",
+        "label": "Sensors Values Collector BasicAuth",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "c77eae45.538de",
+        "type": "influxdb",
+        "z": "",
+        "hostname": "192.168.1.143",
+        "port": "8086",
+        "protocol": "http",
+        "database": "sensors",
+        "name": "",
+        "usetls": false,
+        "tls": ""
+    },
+    {
+        "id": "3cdb1c7b.f44cc4",
+        "type": "http in",
+        "z": "3fdb3428.b20bec",
+        "name": "sensor input",
+        "url": "/sensor",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 210,
+        "y": 460,
+        "wires": [
+            [
+                "db1af714.8e5a28"
+            ]
+        ]
+    },
+    {
+        "id": "db1af714.8e5a28",
+        "type": "function",
+        "z": "3fdb3428.b20bec",
+        "name": "device validator",
+        "func": "// get device id from headers:\nlet deviceId = msg.req.headers['x-device-id'];\n// convert readAt to date:\nmsg.payload.readAt = new Date(msg.payload.readAt);\n// if no x-device-id header, return error:\nif (!deviceId) {\n    let errorMsg = 'Unknown device';\n    // log error:\n    node.error(errorMsg, msg);\n    // update payload:\n    msg.payload = {\n        payload: msg.payload,\n        error: errorMsg,\n        headers: msg.req.headers,\n        receivedAt: new Date()\n    }\n    return msg;\n}\n// else, add x-device-id header to payload:\nmsg.payload.deviceId = deviceId;\n// add receivedAt field:\nmsg.payload.receivedAt = new Date();\n// log:\nnode.log(`Got values from device ${deviceId}`, msg);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 440,
+        "y": 460,
+        "wires": [
+            [
+                "cbefc44c.a45bd8"
+            ]
+        ]
+    },
+    {
+        "id": "cbefc44c.a45bd8",
+        "type": "switch",
+        "z": "3fdb3428.b20bec",
+        "name": "",
+        "property": "payload.error",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "null"
+            },
+            {
+                "t": "nnull"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 670,
+        "y": 460,
+        "wires": [
+            [
+                "c94f1d95.da112",
+                "d09fab72.1f4038",
+                "d8be20d.6a629e",
+                "bd9a60bd.095f",
+                "5b67331d.f58f5c",
+                "bb6d18d0.437538"
+            ],
+            [
+                "489042e8.0a994c"
+            ]
+        ],
+        "outputLabels": [
+            "ok",
+            "error"
+        ]
+    },
+    {
+        "id": "9bcb714b.a8dac",
+        "type": "influxdb out",
+        "z": "3fdb3428.b20bec",
+        "influxdb": "c77eae45.538de",
+        "name": "influx temperatures",
+        "measurement": "temperature",
+        "precision": "",
+        "retentionPolicy": "",
+        "x": 1230,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "c94f1d95.da112",
+        "type": "function",
+        "z": "3fdb3428.b20bec",
+        "name": "extract temperatures",
+        "func": "msg.payload = [\n    {\n        temperature: msg.payload.temperature,\n        cpu: msg.payload.temperature_cpu,\n        compensated: msg.payload.temperature_compensated\n    },\n    {\n        deviceId: msg.payload.deviceId\n    }\n]\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 940,
+        "y": 540,
+        "wires": [
+            [
+                "9bcb714b.a8dac"
+            ]
+        ]
+    },
+    {
+        "id": "d09fab72.1f4038",
+        "type": "function",
+        "z": "3fdb3428.b20bec",
+        "name": "extract pressure",
+        "func": "msg.payload = [\n    {\n        pressure: msg.payload.pressure\n    },\n    {\n        deviceId: msg.payload.deviceId\n    }\n]\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 920,
+        "y": 500,
+        "wires": [
+            [
+                "ec5020fd.b47e6"
+            ]
+        ]
+    },
+    {
+        "id": "d8be20d.6a629e",
+        "type": "function",
+        "z": "3fdb3428.b20bec",
+        "name": "extract humidity",
+        "func": "msg.payload = [\n    {\n        humidity: msg.payload.humidity\n    },\n    {\n        deviceId: msg.payload.deviceId\n    }\n]\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 920,
+        "y": 460,
+        "wires": [
+            [
+                "54a355ca.72865c"
+            ]
+        ]
+    },
+    {
+        "id": "bd9a60bd.095f",
+        "type": "function",
+        "z": "3fdb3428.b20bec",
+        "name": "extract light",
+        "func": "msg.payload = [\n    {\n        light: msg.payload.light\n    },\n    {\n        deviceId: msg.payload.deviceId\n    }\n]\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 910,
+        "y": 420,
+        "wires": [
+            [
+                "87d2889c.b66d28"
+            ]
+        ]
+    },
+    {
+        "id": "5b67331d.f58f5c",
+        "type": "function",
+        "z": "3fdb3428.b20bec",
+        "name": "extract proximity",
+        "func": "msg.payload = [\n    {\n        proximity: msg.payload.proximity\n    },\n    {\n        deviceId: msg.payload.deviceId\n    }\n]\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 920,
+        "y": 380,
+        "wires": [
+            [
+                "3d5c4850.837b78"
+            ]
+        ]
+    },
+    {
+        "id": "ec5020fd.b47e6",
+        "type": "influxdb out",
+        "z": "3fdb3428.b20bec",
+        "influxdb": "c77eae45.538de",
+        "name": "influx pressure",
+        "measurement": "pressure",
+        "precision": "",
+        "retentionPolicy": "",
+        "x": 1220,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "54a355ca.72865c",
+        "type": "influxdb out",
+        "z": "3fdb3428.b20bec",
+        "influxdb": "c77eae45.538de",
+        "name": "influx humidity",
+        "measurement": "humidity",
+        "precision": "",
+        "retentionPolicy": "",
+        "x": 1220,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "87d2889c.b66d28",
+        "type": "influxdb out",
+        "z": "3fdb3428.b20bec",
+        "influxdb": "c77eae45.538de",
+        "name": "influx light",
+        "measurement": "light",
+        "precision": "",
+        "retentionPolicy": "",
+        "x": 1200,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "3d5c4850.837b78",
+        "type": "influxdb out",
+        "z": "3fdb3428.b20bec",
+        "influxdb": "c77eae45.538de",
+        "name": "influx proximity",
+        "measurement": "proximity",
+        "precision": "",
+        "retentionPolicy": "",
+        "x": 1220,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "bb6d18d0.437538",
+        "type": "http response",
+        "z": "3fdb3428.b20bec",
+        "name": "success response",
+        "statusCode": "200",
+        "headers": {},
+        "x": 930,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "489042e8.0a994c",
+        "type": "http response",
+        "z": "3fdb3428.b20bec",
+        "name": "error response",
+        "statusCode": "500",
+        "headers": {},
+        "x": 920,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "c3a51ac8.11cc78",
+        "type": "http in",
+        "z": "4a3b25be.9ccf2c",
+        "name": "sensor input",
+        "url": "/sensorAuth",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 170,
+        "y": 440,
+        "wires": [
+            [
+                "b6c7b985.8cc588"
+            ]
+        ]
+    },
+    {
+        "id": "aa2f0447.b8d078",
+        "type": "function",
+        "z": "4a3b25be.9ccf2c",
+        "name": "device validator",
+        "func": "// get device id from headers:\nlet deviceId = msg.req.headers['x-device-id'];\n// convert readAt to date:\nmsg.payload.readAt = new Date(msg.payload.readAt);\n// if no x-device-id header, return error:\nif (!deviceId) {\n    let errorMsg = 'Unknown device';\n    // log error:\n    node.error(errorMsg, msg);\n    // update payload:\n    msg.payload = {\n        payload: msg.payload,\n        error: errorMsg,\n        headers: msg.req.headers,\n        receivedAt: new Date()\n    }\n    return msg;\n}\n// else, add x-device-id header to payload:\nmsg.payload.deviceId = deviceId;\n// add receivedAt field:\nmsg.payload.receivedAt = new Date();\n// log:\nnode.log(`Got values from device ${deviceId}`, msg);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 600,
+        "y": 440,
+        "wires": [
+            [
+                "7b2d9625.d44af8"
+            ]
+        ]
+    },
+    {
+        "id": "7b2d9625.d44af8",
+        "type": "switch",
+        "z": "4a3b25be.9ccf2c",
+        "name": "",
+        "property": "payload.error",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "null"
+            },
+            {
+                "t": "nnull"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 830,
+        "y": 440,
+        "wires": [
+            [
+                "6c0a5f5c.11b05",
+                "2afc6ff9.b361d",
+                "2f39d8d4.705c28",
+                "30a35a6b.9d3bf6",
+                "56251c94.28feb4",
+                "a0856ef5.ecf33"
+            ],
+            [
+                "d4e32bd0.6dcbc8"
+            ]
+        ],
+        "outputLabels": [
+            "ok",
+            "error"
+        ]
+    },
+    {
+        "id": "ba9974d7.7c82d8",
+        "type": "influxdb out",
+        "z": "4a3b25be.9ccf2c",
+        "influxdb": "c77eae45.538de",
+        "name": "influx temperatures",
+        "measurement": "temperature",
+        "precision": "",
+        "retentionPolicy": "",
+        "x": 1390,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "6c0a5f5c.11b05",
+        "type": "function",
+        "z": "4a3b25be.9ccf2c",
+        "name": "extract temperatures",
+        "func": "msg.payload = [\n    {\n        temperature: msg.payload.temperature,\n        cpu: msg.payload.temperature_cpu,\n        compensated: msg.payload.temperature_compensated\n    },\n    {\n        deviceId: msg.payload.deviceId\n    }\n]\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1100,
+        "y": 520,
+        "wires": [
+            [
+                "ba9974d7.7c82d8"
+            ]
+        ]
+    },
+    {
+        "id": "2afc6ff9.b361d",
+        "type": "function",
+        "z": "4a3b25be.9ccf2c",
+        "name": "extract pressure",
+        "func": "msg.payload = [\n    {\n        pressure: msg.payload.pressure\n    },\n    {\n        deviceId: msg.payload.deviceId\n    }\n]\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1080,
+        "y": 480,
+        "wires": [
+            [
+                "b9f143bf.347ae"
+            ]
+        ]
+    },
+    {
+        "id": "2f39d8d4.705c28",
+        "type": "function",
+        "z": "4a3b25be.9ccf2c",
+        "name": "extract humidity",
+        "func": "msg.payload = [\n    {\n        humidity: msg.payload.humidity\n    },\n    {\n        deviceId: msg.payload.deviceId\n    }\n]\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1080,
+        "y": 440,
+        "wires": [
+            [
+                "62bd1d1b.6faec4"
+            ]
+        ]
+    },
+    {
+        "id": "30a35a6b.9d3bf6",
+        "type": "function",
+        "z": "4a3b25be.9ccf2c",
+        "name": "extract light",
+        "func": "msg.payload = [\n    {\n        light: msg.payload.light\n    },\n    {\n        deviceId: msg.payload.deviceId\n    }\n]\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1070,
+        "y": 400,
+        "wires": [
+            [
+                "279fd5fa.802dea"
+            ]
+        ]
+    },
+    {
+        "id": "56251c94.28feb4",
+        "type": "function",
+        "z": "4a3b25be.9ccf2c",
+        "name": "extract proximity",
+        "func": "msg.payload = [\n    {\n        proximity: msg.payload.proximity\n    },\n    {\n        deviceId: msg.payload.deviceId\n    }\n]\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1080,
+        "y": 360,
+        "wires": [
+            [
+                "d3a5dd2d.3ac8c"
+            ]
+        ]
+    },
+    {
+        "id": "b9f143bf.347ae",
+        "type": "influxdb out",
+        "z": "4a3b25be.9ccf2c",
+        "influxdb": "c77eae45.538de",
+        "name": "influx pressure",
+        "measurement": "pressure",
+        "precision": "",
+        "retentionPolicy": "",
+        "x": 1380,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "62bd1d1b.6faec4",
+        "type": "influxdb out",
+        "z": "4a3b25be.9ccf2c",
+        "influxdb": "c77eae45.538de",
+        "name": "influx humidity",
+        "measurement": "humidity",
+        "precision": "",
+        "retentionPolicy": "",
+        "x": 1380,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "279fd5fa.802dea",
+        "type": "influxdb out",
+        "z": "4a3b25be.9ccf2c",
+        "influxdb": "c77eae45.538de",
+        "name": "influx light",
+        "measurement": "light",
+        "precision": "",
+        "retentionPolicy": "",
+        "x": 1360,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "d3a5dd2d.3ac8c",
+        "type": "influxdb out",
+        "z": "4a3b25be.9ccf2c",
+        "influxdb": "c77eae45.538de",
+        "name": "influx proximity",
+        "measurement": "proximity",
+        "precision": "",
+        "retentionPolicy": "",
+        "x": 1380,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "a0856ef5.ecf33",
+        "type": "http response",
+        "z": "4a3b25be.9ccf2c",
+        "name": "success response",
+        "statusCode": "200",
+        "headers": {},
+        "x": 1090,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "d4e32bd0.6dcbc8",
+        "type": "http response",
+        "z": "4a3b25be.9ccf2c",
+        "name": "error response",
+        "statusCode": "500",
+        "headers": {},
+        "x": 1080,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "b6c7b985.8cc588",
+        "type": "node-red-contrib-httpauth",
+        "z": "4a3b25be.9ccf2c",
+        "name": "",
+        "file": "",
+        "cred": "",
+        "authType": "Basic",
+        "realm": "",
+        "username": "collector",
+        "password": "collector1234",
+        "hashed": false,
+        "x": 380,
+        "y": 440,
+        "wires": [
+            [
+                "aa2f0447.b8d078"
+            ]
+        ]
+    }
+]
